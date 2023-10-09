@@ -1,0 +1,338 @@
+[10/9, 1:04 PM] singhsawan320: #include <stdio.h>
+#include <stdlib.h>
+
+int main() {
+    int n; // Number of memory frames
+    printf("Enter the number of memory frames: ");
+    scanf("%d", &n);
+
+    int referenceString[] = {12, 15, 12, 18, 6, 8, 11, 12, 19, 12, 6, 8, 12, 15, 19, 8};
+    int size = sizeof(referenceString) / sizeof(referenceString[0]);
+
+    int memory[n];
+    int pageFaults = 0;
+
+    for (int i = 0; i < n; i++) {
+        memory[i] = -1; // Initialize memory frames to -1 (empty)
+    }
+
+    // Implement FIFO page replacement algorithm
+    int currentIndex = 0;
+    for (int i = 0; i < size; i++) {
+        int page = referenceString[i];
+        int pageFound = 0;
+
+        // Check if the page is already in memory
+        for (int j = 0; j < n; j++) {
+            if (memory[j] == page) {
+                pageFound = 1;
+                break;
+            }
+        }
+
+        // Page fault, replace the oldest page in memory
+        if (!pageFound) {
+            memory[currentIndex] = page;
+            currentIndex = (currentIndex + 1) % n;
+            pageFaults++;
+        }
+    }
+
+    printf("FIFO Page Scheduling:\n");
+    for (int i = 0; i < n; i++) {
+        printf("Frame %d: Page %d\n", i + 1, memory[i]);
+    }
+    printf("Total Page Faults: %d\n", pageFaults);
+
+    return 0;
+}
+[10/9, 1:05 PM] singhsawan320: #include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+
+// Function to check if a page is in memory
+bool isInMemory(int page, int memory[], int n) {
+    for (int i = 0; i < n; i++) {
+        if (memory[i] == page) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// Function to find the index of the page that will not be used furthest in the future
+int findOptimalPage(int referenceString[], int memory[], int n, int currentIndex) {
+    int farthest = -1;
+    int index = -1;
+    for (int i = 0; i < n; i++) {
+        int page = memory[i];
+        int j;
+        for (j = currentIndex; j < n; j++) {
+            if (referenceString[j] == page) {
+                if (j > farthest) {
+                    farthest = j;
+                    index = i;
+                }
+                break;
+            }
+        }
+        if (j == n) {
+            return i;
+        }
+    }
+    if (index == -1) {
+        return 0;
+    }
+    return index;
+}
+
+// Function to simulate demand paging with the OPT (Optimal) algorithm
+void simulateOPT(int referenceString[], int size, int memory[], int n) {
+    int pageFaults = 0;
+
+    for (int i = 0; i < n; i++) {
+        memory[i] = -1; // Initialize memory frames to -1 (empty)
+    }
+
+    for (int i = 0; i < size; i++) {
+        int page = referenceString[i;
+
+        // Check if the page is already in memory
+        if (!isInMemory(page, memory, n)) {
+            int index = findOptimalPage(referenceString, memory, n, i + 1);
+            memory[index] = page;
+            pageFaults++;
+        }
+    }
+
+    printf("OPT Page Scheduling:\n");
+    for (int i = 0; i < n; i++) {
+        printf("Frame %d: Page %d\n", i + 1, memory[i]);
+    }
+    printf("Total Page Faults: %d\n", pageFaults);
+}
+
+// Function to simulate demand paging with the MFU (Most Frequently Used) algorithm
+void simulateMFU(int referenceString[], int size, int memory[], int n) {
+    int pageFaults = 0;
+    int pageCount[n];
+    int mfuIndex;
+
+    for (int i = 0; i < n; i++) {
+        memory[i] = -1; // Initialize memory frames to -1 (empty)
+        pageCount[i] = 0;
+    }
+
+    for (int i = 0; i < size; i++) {
+        int page = referenceString[i];
+
+        // Check if the page is already in memory
+        if (!isInMemory(page, memory, n)) {
+            int j;
+            for (j = 0; j < n; j++) {
+                if (memory[j] == -1) {
+                    memory[j] = page;
+                    pageCount[j]++;
+                    pageFaults++;
+                    break;
+                }
+            }
+
+            if (j == n) {
+                mfuIndex = 0;
+                for (int k = 1; k < n; k++) {
+                    if (pageCount[k] > pageCount[mfuIndex]) {
+                        mfuIndex = k;
+                    }
+                }
+                memory[mfuIndex] = page;
+                pageCount[mfuIndex] = 1;
+                pageFaults++;
+            }
+        } else {
+            // Page is already in memory, increment its usage count
+            for (int k = 0; k < n; k++) {
+                if (memory[k] == page) {
+                    pageCount[k]++;
+                    break;
+                }
+            }
+        }
+    }
+
+    printf("MFU Page Scheduling:\n");
+    for (int i = 0; i < n; i++) {
+        printf("Frame %d: Page %d\n", i + 1, memory[i]);
+    }
+    printf("Total Page Faults: %d\n", pageFaults);
+}
+
+int main() {
+    int n; // Number of memory frames
+    printf("Enter the number of memory frames: ");
+    scanf("%d", &n);
+
+    int referenceString[] = {12, 15, 12, 18, 6, 8, 11, 12, 19, 12, 6, 8, 12, 15, 19, 8};
+    int size = sizeof(referenceString) / sizeof(referenceString[0]);
+
+    int memoryOPT[n];
+    int memoryMFU[n];
+
+    simulateOPT(referenceString, size, memoryOPT, n);
+    simulateMFU(referenceString, size, memoryMFU, n);
+
+    return 0;
+}
+[10/9, 1:07 PM] singhsawan320: #include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+
+// Function to check if a page is in memory
+bool isInMemory(int page, int memory[], int n) {
+    for (int i = 0; i < n; i++) {
+        if (memory[i] == page) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// Function to simulate demand paging with the MRU (Most Recently Used) algorithm
+void simulateMRU(int referenceString[], int size, int memory[], int n) {
+    int pageFaults = 0;
+
+    for (int i = 0; i < n; i++) {
+        memory[i] = -1; // Initialize memory frames to -1 (empty)
+    }
+
+    for (int i = 0; i < size; i++) {
+        int page = referenceString[i];
+
+        // Check if the page is already in memory
+        if (!isInMemory(page, memory, n)) {
+            int mruIndex = 0;
+            int mruTime = -1;
+            for (int j = 0; j < n; j++) {
+                if (memory[j] == -1) {
+                    mruIndex = j;
+                    break;
+                }
+                if (referenceString[i - 1] == memory[j]) {
+                    mruTime = j;
+                }
+            }
+            if (mruTime != -1) {
+                mruIndex = mruTime;
+            }
+            memory[mruIndex] = page;
+            pageFaults++;
+        }
+    }
+
+    printf("MRU Page Scheduling:\n");
+    for (int i = 0; i < n; i++) {
+        printf("Frame %d: Page %d\n", i + 1, memory[i]);
+    }
+    printf("Total Page Faults: %d\n", pageFaults);
+}
+
+// Function to simulate demand paging with the Second Chance algorithm
+void simulateSecondChance(int referenceString[], int size, int memory[], int n) {
+    int pageFaults = 0;
+    bool secondChance[n];
+
+    for (int i = 0; i < n; i++) {
+        memory[i] = -1; // Initialize memory frames to -1 (empty)
+        secondChance[i] = false;
+    }
+
+    int currentIndex = 0;
+
+    for (int i = 0; i < size; i++) {
+        int page = referenceString[i];
+
+        // Check if the page is already in memory
+        if (!isInMemory(page, memory, n)) {
+            while (true) {
+                if (!secondChance[currentIndex]) {
+                    memory[currentIndex] = page;
+                    pageFaults++;
+                    currentIndex = (currentIndex + 1) % n;
+                    break;
+                } else {
+                    secondChance[currentIndex] = false;
+                    currentIndex = (currentIndex + 1) % n;
+                }
+            }
+        }
+    }
+
+    printf("Second Chance Page Scheduling:\n");
+    for (int i = 0; i < n; i++) {
+        printf("Frame %d: Page %d\n", i + 1, memory[i]);
+    }
+    printf("Total Page Faults: %d\n", pageFaults);
+}
+
+// Function to simulate demand paging with the LFU (Least Frequently Used) algorithm
+void simulateLFU(int referenceString[], int size, int memory[], int n) {
+    int pageFaults = 0;
+    int pageCount[n];
+
+    for (int i = 0; i < n; i++) {
+        memory[i] = -1; // Initialize memory frames to -1 (empty)
+        pageCount[i] = 0;
+    }
+
+    for (int i = 0; i < size; i++) {
+        int page = referenceString[i];
+
+        // Check if the page is already in memory
+        if (!isInMemory(page, memory, n)) {
+            int lfuIndex = 0;
+            int minPageCount = pageCount[0];
+            for (int j = 1; j < n; j++) {
+                if (pageCount[j] < minPageCount) {
+                    lfuIndex = j;
+                    minPageCount = pageCount[j];
+                }
+            }
+            memory[lfuIndex] = page;
+            pageCount[lfuIndex] = 1;
+            pageFaults++;
+        } else {
+            // Page is already in memory, increment its usage count
+            for (int k = 0; k < n; k++) {
+                if (memory[k] == page) {
+                    pageCount[k]++;
+                    break;
+                }
+            }
+        }
+    }
+
+    printf("LFU Page Scheduling:\n");
+    for (int i = 0; i < n; i++) {
+        printf("Frame %d: Page %d\n", i + 1, memory[i]);
+    }
+    printf("Total Page Faults: %d\n", pageFaults);
+}
+
+int main() {
+    int n; // Number of memory frames
+    printf("Enter the number of memory frames: ");
+    scanf("%d", &n);
+
+    int referenceString[] = {2, 5, 2, 8, 5, 4, 1, 2, 3, 2, 6, 1, 2, 5, 9, 8};
+    int size = sizeof(referenceString) / sizeof(referenceString[0]);
+
+    int memoryMRU[n];
+    int memorySecondChance[n];
+    int memoryLFU[n];
+
+    simulateMRU(referenceString, size, memoryMRU, n);
+    simulateSecondChance(referenceString, size, memorySecondChance, n);
+    simulateLFU(referenceString, size, memoryLFU, n);
+
+    return 0;
+}
